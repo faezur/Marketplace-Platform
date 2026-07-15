@@ -11,3 +11,6 @@ Thumbs.db
 .idea/
 coverage/
 *.tsbuildinfo
+apps/api/src/config/
+apps/api/src/modules/
+apps/api/src/middleware/
