@@ -1,0 +1,131 @@
+enum UserRole {
+  ADMIN
+  MERCHANT
+  CUSTOMER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+model User {
+  id                String      @id @default(cuid())
+
+  fullName          String
+
+  email             String      @unique
+
+  password          String
+
+  phone             String?
+
+  avatar            String?
+
+  role              UserRole    @default(CUSTOMER)
+
+  status            UserStatus  @default(PENDING)
+
+  isEmailVerified   Boolean     @default(false)
+
+  lastLoginAt       DateTime?
+
+  createdAt         DateTime    @default(now())
+
+  updatedAt         DateTime    @updatedAt
+}
+
+model Merchant {
+  id                 String    @id @default(cuid())
+
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  governmentId       String?
+  governmentIdType   String?
+  walletAddress      String?
+
+  isApproved         Boolean   @default(false)
+  approvedAt         DateTime?
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+
+  name        String
+
+  slug        String   @unique
+
+  description String?
+
+  image       String?
+
+  isActive    Boolean  @default(true)
+
+  sortOrder   Int      @default(0)
+
+  parentId    String?
+
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+
+  children    Category[] @relation("CategoryHierarchy")
+
+  products    Product[]
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id           String          @id @default(cuid())
+
+  name         String
+
+  slug         String          @unique
+
+  description  String?
+
+  sku          String          @unique
+
+  brand        String?
+
+  price        Decimal         @db.Decimal(10,2)
+
+  stock        Int             @default(0)
+
+  isFeatured   Boolean         @default(false)
+
+  isPublished  Boolean         @default(false)
+
+  categoryId   String
+
+  category     Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  images       ProductImage[]
+
+  createdAt    DateTime        @default(now())
+
+  updatedAt    DateTime        @updatedAt
+}
+
+model ProductImage {
+  id          String      @id @default(cuid())
+
+  productId   String
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url         String
+
+  isPrimary   Boolean     @default(false)
+
+  sortOrder   Int         @default(0)
+
+  createdAt   DateTime    @default(now())
+}
