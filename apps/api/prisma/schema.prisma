@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Currency {
+  USDT
+}
+
 enum UserRole {
   ADMIN
   MERCHANT
@@ -18,6 +22,13 @@ enum MerchantStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum UserStatus {
@@ -85,66 +96,77 @@ model Merchant {
 
   createdAt DateTime @default(now())
 
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 model Category {
-  id String @id @default(cuid())
-
-  name String
-
-  slug String @unique
-
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
   description String?
 
   image String?
 
-  isActive Boolean @default(true)
-
-  sortOrder Int @default(0)
-
   parentId String?
-
-  parent Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
 
   products Product[]
 
-  createdAt DateTime @default(now())
+  isActive Boolean @default(true)
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([parentId])
 }
 
 model Product {
   id String @id @default(cuid())
 
-  name String
-
-  slug String @unique
-
-  description String?
-
-  sku String @unique
-
-  brand String?
-
-  price Decimal @db.Decimal(10, 2)
-
-  stock Int @default(0)
-
-  isFeatured Boolean @default(false)
-
-  isPublished Boolean @default(false)
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
 
   categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  name        String
+  slug        String  @unique
+  description String?
+
+  sku   String? @unique
+  brand String?
+
+  price          Decimal  @db.Decimal(12, 2)
+  compareAtPrice Decimal? @db.Decimal(12, 2)
+  costPrice      Decimal? @db.Decimal(12, 2)
+  currency      Currency @default(USDT)
+
+  stock       Int  @default(0)
+  minOrderQty Int  @default(1)
+  maxOrderQty Int?
+
+  weight Float?
+  length Float?
+  width  Float?
+  height Float?
+
+  manufacturer    String?
+  countryOfOrigin String?
+  warranty        String?
+
+  attributes Json?
+
+  isFeatured  Boolean @default(false)
+  isPublished Boolean @default(false)
+
+  status      ProductStatus @default(PENDING)
+  publishedAt DateTime?
 
   images ProductImage[]
 
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
 }
 
@@ -162,4 +184,17 @@ model ProductImage {
   sortOrder Int @default(0)
 
   createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id               String   @id @default(cuid())
+
+  merchantId       String   @unique
+  merchant         Merchant @relation(fields: [merchantId], references: [id])
+
+  balance          Decimal  @db.Decimal(18,8) @default(0)
+  lockedBalance    Decimal  @db.Decimal(18,8) @default(0)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

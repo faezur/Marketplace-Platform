@@ -27,7 +27,10 @@ export class MerchantRepository {
     });
   }
 
-  async approveMerchant(merchantId: string, approvedBy: string) {
+  async approveMerchant(
+    merchantId: string,
+    approvedBy: string
+  ) {
     return prisma.merchant.update({
       where: {
         id: merchantId,

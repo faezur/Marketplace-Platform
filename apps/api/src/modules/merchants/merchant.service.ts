@@ -1,69 +1,59 @@
 import { MerchantStatus } from "@prisma/client";
 import { MerchantRepository } from "./merchant.repository.js";
+import { AppError } from "../../shared/errors/app-error.js";
 
 export class MerchantService {
   constructor(
     private readonly merchantRepository = new MerchantRepository()
   ) {}
 
-    async getPendingMerchants() {
+  async getPendingMerchants() {
     return await this.merchantRepository.findPendingMerchants();
-    }
+  }
 
-    async getMerchantById(merchantId: string) {
-    const merchant =
-        await this.merchantRepository.findMerchantById(merchantId);
+  async getMerchantById(merchantId: string) {
+    const merchant = await this.merchantRepository.findMerchantById(
+      merchantId
+    );
 
     if (!merchant) {
-        throw new Error("Merchant not found.");
+      throw new AppError("Merchant not found", 404);
     }
 
     return merchant;
-    }
+  }
 
-    
-    async approveMerchant(
+  async approveMerchant(
     merchantId: string,
     approvedBy: string
-    ) {
-    const merchant =
-        await this.merchantRepository.findMerchantById(merchantId);
-
-    if (!merchant) {
-        throw new Error("Merchant not found.");
-    }
+  ) {
+    const merchant = await this.getMerchantById(merchantId);
 
     if (merchant.status === MerchantStatus.APPROVED) {
-        throw new Error("Merchant already approved.");
+      throw new AppError("Merchant is already approved", 409);
     }
 
     return await this.merchantRepository.approveMerchant(
-        merchantId,
-        approvedBy
+      merchantId,
+      approvedBy
     );
-    } 
+  }
 
-
-    async rejectMerchant(
+  async rejectMerchant(
     merchantId: string,
     rejectedBy: string,
     reason: string
-    ) {
-    const merchant =
-        await this.merchantRepository.findMerchantById(merchantId);
-
-    if (!merchant) {
-        throw new Error("Merchant not found.");
-    }
+  ) {
+    const merchant = await this.getMerchantById(merchantId);
 
     if (merchant.status === MerchantStatus.REJECTED) {
-        throw new Error("Merchant already rejected.");
+      throw new AppError("Merchant is already rejected", 409);
     }
 
     return await this.merchantRepository.rejectMerchant(
-        merchantId,
-        rejectedBy,
-        reason
+      merchantId,
+      rejectedBy,
+      reason
     );
-    }
+  }
 }

@@ -55,18 +55,27 @@ async registerMerchant(data: RegisterMerchantDto): Promise<RegisterMerchantRespo
 
 
 async login(data: LoginDto): Promise<AuthResponse> {
+  console.log("Request:", data);
+
   const user = await this.authRepository.findUserByEmail(data.email);
+
+  console.log("User:", user);
 
   if (!user) {
     throw new Error("Invalid email or password.");
   }
+
   const isPasswordValid = await bcrypt.compare(
     data.password,
     user.password
   );
+
+  console.log("Password Match:", isPasswordValid);
+
   if (!isPasswordValid) {
     throw new Error("Invalid email or password.");
   }
+
 // Merchant approval check
   if (
     user.role === "MERCHANT" &&
